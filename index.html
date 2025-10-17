@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Escape-Chatbot</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url('hintergrund.jpg') no-repeat center center / cover;
+}
+#chat {
+  width: 90%;
+  max-width: 500px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255,255,255,0.8);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+.message {
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  max-width: 75%;
+  word-wrap: break-word;
+}
+.bot { background: #f1f0f0; align-self: flex-start; }
+.user { background: #007bff; color: white; align-self: flex-end; }
+#inputArea {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  background: #fafafa;
+}
+#userInput {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #aaa;
+  font-size: 14px;
+}
+#send {
+  margin-left: 8px;
+  padding: 10px 16px;
+  background: #007bff;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+}
+#send:hover { background: #0056b3; }
+</style>
+</head>
+<body>
+  <div id="chat">
+    <div id="messages"></div>
+    <div id="inputArea">
+      <input id="userInput" placeholder="Schreib etwas..." />
+      <button id="send">Senden</button>
+    </div>
+  </div>
+
+<script>
+let story = [];
+let currentScene = 0;
+
+// Nachrichten anzeigen
+function addMessage(text, sender='bot') {
+  const msg = document.createElement('div');
+  msg.className = 'message ' + sender;
+  msg.textContent = text;
+  document.getElementById('messages').appendChild(msg);
+  document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+}
+
+// Story laden
+async function loadStory() {
+  const res = await fetch('story.json');
+  story = await res.json();
+  showScene(story[0]);
+}
+
+// Szene anzeigen
+function showScene(scene) {
+  addMessage(scene.bot, 'bot');
+}
+
+// Nutzer-Eingabe prüfen
+async function handleUserInput() {
+  const input = document.getElementById('userInput').value.trim().toLowerCase();
+  if (!input) return;
+  addMessage(input, 'user');
+  document.getElementById('userInput').value = '';
+
+  const scene = story[currentScene];
+
+  if (scene.expected && scene.expected.some(e => input.includes(e))) {
+    if (scene.next !== undefined) {
+      currentScene = scene.next;
+      showScene(story[currentScene]);
+    } else {
+      addMessage("Ende der Geschichte.", "bot");
+    }
+  } else {
+    // Falsche Antwort → KI oder statische Fehlermeldung
+    if (scene.failType === "static") {
+      addMessage(scene.fail, "bot");
+    } else {
+      // KI-ähnliche zufällige Antwort (offline Variante)
+      const replies = [
+        "Das ergibt keinen Sinn... Versuch es anders.",
+        "Hm... das scheint nicht richtig zu sein.",
+        "Ich glaube, du hast etwas übersehen.",
+        "Das war knapp daneben. Denk nochmal nach."
+      ];
+      addMessage(replies[Math.floor(Math.random() * replies.length)], "bot");
+    }
+  }
+}
+
+document.getElementById('send').addEventListener('click', handleUserInput);
+document.getElementById('userInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleUserInput();
+});
+
+window.onload = loadStory;
+</script>
+</body>
+</html>

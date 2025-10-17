@@ -1,0 +1,18 @@
+[
+  {
+    "bot": "Hallo! Ich bin der Insasse 47B. Ich brauche deine Hilfe, um hier rauszukommen. Wenn du mir helfen willst, sag einfach: 'Natürlich, mein Schatz'.",
+    "expected": ["natürlich, mein schatz"],
+    "next": 1,
+    "fail": "Hm... das klingt nicht richtig. Versuch's nochmal, mein Engel."
+  },
+  {
+    "bot": "Perfekt! Ich habe vom Wärter eine Nachricht bekommen: 'Die Fantas zählten die Beine eines Insekts'. Was meinst du, welche Zahl ist gemeint?",
+    "expected": ["6", "sechs"],
+    "next": 2,
+    "fail": "Nein, das ist nicht korrekt. Denk an ein Insekt..."
+  },
+  {
+    "bot": "Richtig! Du bist genial. Schnell, bevor jemand merkt, dass ich verschwunden bin!",
+    "end": true
+  }
+]
