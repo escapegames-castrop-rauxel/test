@@ -2,141 +2,169 @@
 <html lang="de">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Escape-Chatbot</title>
+<title>Chatbot</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link rel="icon" href="favicon.png" type="image/png">
 <style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: url('hintergrund.jpg') no-repeat center center / cover;
+:root{
+  --bg1: url("Gefängnisinsasse.png") no-repeat center center fixed;
+  --bot-bubble: #f1f0f0;
+  --user-bubble: #4e9af1;
 }
-#chat {
-  width: 90%;
-  max-width: 500px;
-  height: 80vh;
-  display: flex;
-  flex-direction: column;
-  background: rgba(255,255,255,0.8);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  overflow: hidden;
+
+html,body{
+  height:100%;
+  margin:0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: var(--bg1);
+  background-size: cover;
+  background-position: center center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px;
+  box-sizing:border-box;
 }
-#messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
+
+#chat{
+  width:90vw;
+  max-width:520px;
+  height:80vh;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+  border-radius:18px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
 }
-.message {
-  margin: 10px 0;
-  padding: 10px 14px;
-  border-radius: 14px;
-  max-width: 75%;
-  word-wrap: break-word;
+
+#messages{flex:1;padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+.message{display:flex;align-items:flex-end;max-width:75%;}
+.message.user{align-self:flex-end;flex-direction:row-reverse;}
+.message.bot{align-self:flex-start;}
+.message img{width:36px; height:36px; border-radius:50%; margin:0 8px; flex-shrink:0; object-fit:cover;}
+.bubble{padding:10px 14px; border-radius:16px; font-size:14px; line-height:1.4; box-shadow:0 2px 6px rgba(0,0,0,0.08); word-wrap:break-word;}
+.bot .bubble{background:var(--bot-bubble);color:#111;border-bottom-left-radius:6px;}
+.user .bubble{background:var(--user-bubble);color:#fff;border-bottom-right-radius:6px;}
+#inputArea{display:flex;padding:10px;background:rgba(250,250,250,0.7);border-top:1px solid #eee;}
+#userInput{flex:1;padding:10px;border-radius:24px;border:1px solid #ccc;font-size:14px;outline:none;}
+button#send{margin-left:8px;padding:10px 16px;border-radius:20px;border:none;background:#4e9af1;color:#fff;cursor:pointer;font-weight:600;}
+button#send:active{transform:translateY(1px);}
+#overlay{
+  position: fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  display:none;
+  opacity:0;
+  z-index:10000;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center center;
 }
-.bot { background: #f1f0f0; align-self: flex-start; }
-.user { background: #007bff; color: white; align-self: flex-end; }
-#inputArea {
-  display: flex;
-  padding: 10px;
-  border-top: 1px solid #ccc;
-  background: #fafafa;
-}
-#userInput {
-  flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #aaa;
-  font-size: 14px;
-}
-#send {
-  margin-left: 8px;
-  padding: 10px 16px;
-  background: #007bff;
-  border: none;
-  border-radius: 10px;
-  color: white;
-  cursor: pointer;
-}
-#send:hover { background: #0056b3; }
 </style>
 </head>
 <body>
-  <div id="chat">
-    <div id="messages"></div>
-    <div id="inputArea">
-      <input id="userInput" placeholder="Schreib etwas..." />
-      <button id="send">Senden</button>
-    </div>
+
+<div id="chat" role="application" aria-label="Chatbot">
+  <div id="messages" aria-live="polite"></div>
+  <div id="inputArea">
+    <input id="userInput" type="text" placeholder="Schreib etwas..." aria-label="Nachricht eingeben" />
+    <button id="send">Senden</button>
   </div>
+</div>
+
+<div id="overlay" aria-hidden="true"></div>
 
 <script>
-let story = [];
-let currentScene = 0;
+// Avatare
+const botAvatar="bot.png";
+const userAvatar="user.png";
 
-// Nachrichten anzeigen
-function addMessage(text, sender='bot') {
-  const msg = document.createElement('div');
-  msg.className = 'message ' + sender;
-  msg.textContent = text;
-  document.getElementById('messages').appendChild(msg);
-  document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-}
+// Chat-Elemente
+const messages=document.getElementById('messages');
+const input=document.getElementById('userInput');
+const sendBtn=document.getElementById('send');
 
 // Story laden
-async function loadStory() {
-  const res = await fetch('story.json');
-  story = await res.json();
-  showScene(story[0]);
+let story = null;
+fetch('story.json')
+  .then(res => res.json())
+  .then(data => {
+    story = data;
+    botType(story.startMessage);
+  })
+  .catch(err => console.error("Story konnte nicht geladen werden:", err));
+
+// Nachricht hinzufügen
+function addMessage(text,sender='bot'){
+  const msgWrap=document.createElement('div');
+  msgWrap.className='message '+sender;
+  const img=document.createElement('img');
+  img.src=(sender==='bot')?botAvatar:userAvatar;
+  img.alt = sender==='bot' ? 'Bot' : 'Du';
+  const bubble=document.createElement('div');
+  bubble.className='bubble';
+  bubble.textContent=text;
+  if(sender==='bot'){msgWrap.appendChild(img);msgWrap.appendChild(bubble);}
+  else{msgWrap.appendChild(bubble);msgWrap.appendChild(img);}
+  messages.appendChild(msgWrap);
+  messages.scrollTop=messages.scrollHeight;
 }
 
-// Szene anzeigen
-function showScene(scene) {
-  addMessage(scene.bot, 'bot');
+// Bot tippt
+function botType(text, delay=2000){
+  return new Promise(resolve=>{
+    const typing=document.createElement('div');
+    typing.className='message bot';
+    typing.innerHTML=`<img src="${botAvatar}" alt="Bot"><div class="bubble"><em>… tippt</em></div>`;
+    messages.appendChild(typing);
+    messages.scrollTop=messages.scrollHeight;
+    setTimeout(()=>{
+      typing.remove();
+      addMessage(text,'bot');
+      resolve();
+    }, delay);
+  });
 }
 
-// Nutzer-Eingabe prüfen
-async function handleUserInput() {
-  const input = document.getElementById('userInput').value.trim().toLowerCase();
-  if (!input) return;
-  addMessage(input, 'user');
-  document.getElementById('userInput').value = '';
+// Eingabe
+function sendMessage(){
+  if(!story) return;
+  const txt=input.value.trim();
+  if(!txt) return;
+  addMessage(txt,'user');
+  input.value='';
 
-  const scene = story[currentScene];
+  const userInputLower = txt.toLowerCase();
 
-  if (scene.expected && scene.expected.some(e => input.includes(e))) {
-    if (scene.next !== undefined) {
-      currentScene = scene.next;
-      showScene(story[currentScene]);
-    } else {
-      addMessage("Ende der Geschichte.", "bot");
-    }
+  // Hilfe prüfen
+  const needsHelp = story.helpTriggers.some(t => userInputLower.includes(t.toLowerCase()));
+
+  if(userInputLower === story.expectedPhrase.toLowerCase()){
+    let delay=0;
+    story.correctResponse.forEach(r => {
+      setTimeout(()=>botType(r), delay);
+      delay += 3000;
+    });
+  } else if(needsHelp){
+    let delay=0;
+    story.helpResponses.forEach(r => {
+      setTimeout(()=>botType(r), delay);
+      delay += 3000;
+    });
   } else {
-    // Falsche Antwort → KI oder statische Fehlermeldung
-    if (scene.failType === "static") {
-      addMessage(scene.fail, "bot");
-    } else {
-      // KI-ähnliche zufällige Antwort (offline Variante)
-      const replies = [
-        "Das ergibt keinen Sinn... Versuch es anders.",
-        "Hm... das scheint nicht richtig zu sein.",
-        "Ich glaube, du hast etwas übersehen.",
-        "Das war knapp daneben. Denk nochmal nach."
-      ];
-      addMessage(replies[Math.floor(Math.random() * replies.length)], "bot");
-    }
+    botType(story.wrongResponse);
   }
 }
 
-document.getElementById('send').addEventListener('click', handleUserInput);
-document.getElementById('userInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleUserInput();
-});
-
-window.onload = loadStory;
+// Events
+sendBtn.addEventListener('click',sendMessage);
+input.addEventListener('keydown',e=>{if(e.key==='Enter')sendMessage();});
 </script>
 </body>
 </html>
