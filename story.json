@@ -1,18 +1,14 @@
-[
-  {
-    "bot": "Hallo! Ich bin der Insasse 47B. Ich brauche deine Hilfe, um hier rauszukommen. Wenn du mir helfen willst, sag einfach: 'Natürlich, mein Schatz'.",
-    "expected": ["natürlich, mein schatz"],
-    "next": 1,
-    "fail": "Hm... das klingt nicht richtig. Versuch's nochmal, mein Engel."
-  },
-  {
-    "bot": "Perfekt! Ich habe vom Wärter eine Nachricht bekommen: 'Die Fantas zählten die Beine eines Insekts'. Was meinst du, welche Zahl ist gemeint?",
-    "expected": ["6", "sechs"],
-    "next": 2,
-    "fail": "Nein, das ist nicht korrekt. Denk an ein Insekt..."
-  },
-  {
-    "bot": "Richtig! Du bist genial. Schnell, bevor jemand merkt, dass ich verschwunden bin!",
-    "end": true
-  }
-]
+{
+  "startMessage": "Hallo! Endlich kommst du mich besuchen. Wenn du mir helfen willst, schreibe 'Natürlich, mein Schatz'.",
+  "expectedPhrase": "Natürlich, mein Schatz",
+  "correctResponse": [
+    "Ich konnte einen Gefängniswärter schmieren. Er hat mir den Geheimcode über eine verschlüsselte Nachricht mitgeteilt. In der Nachricht steht geschrieben 'Die Fantas zählten die Beine eines Insekts. Sie wurden von bekannten Zwergen aus der neun Welt beobachtet - was eine Dreistigkeit.'",
+    "Ich verstehe kein einziges Wort. Wirst du daraus schlau? Versuche bitte das Rätsel zu lösen."
+  ],
+  "helpTriggers": ["hilfe", "ich weiß nicht", "kann nicht", "?", "verloren"],
+  "helpResponses": [
+    "Tipp 1: Schau genau hin, was in der verschlüsselten Nachricht steht.",
+    "Tipp 2: Die Fantas zählten die Beine eines Insekts – vielleicht ist das ein Hinweis auf Zahlen oder Reihenfolge."
+  ],
+  "wrongResponse": "Du möchtest mir nicht helfen? Überleg dir das gut. Antworte mit 'Natürlich, mein Schatz'."
+}
