@@ -1,15 +1,9 @@
 {
-  "startMessage": "Hallo! Willkommen bei unserem Rätsel.",
-  "expectedPhrase": "Ich bin bereit",
-  "correctResponse": [
-    "Sehr gut! Dann beginnen wir.",
-    "Hier ist dein erstes Rätsel: ..."
-  ],
-  "wrongResponse": "Das war leider nicht korrekt. Versuch es erneut.",
-  "helpTriggers": ["hilfe", "ich weiß nicht", "?"],
+  "startMessage": "Hallo! Ich brauche deine Hilfe bei diesem Rätsel. Schreib mir jederzeit, wenn du nicht weiterkommst!",
+  "helpTriggers": ["hilfe", "tip", "hint", "weiter"],
   "helpResponses": [
-    "Tipp 1: Denk an die Farben.",
-    "Tipp 2: Überlege, was vorher passiert ist."
-  ]
+    "Vielleicht solltest du das Symbol auf der Tür genau ansehen.",
+    "Überlege, welche Zahl auf dem Schloss fehlt."
+  ],
+  "defaultResponse": "Interessant… versuche weiter, das Rätsel zu lösen."
 }
-
