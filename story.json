@@ -1,9 +1,16 @@
 {
-  "startMessage": "Hallo! Ich brauche deine Hilfe bei diesem Rätsel. Schreib mir jederzeit, wenn du nicht weiterkommst!",
-  "helpTriggers": ["hilfe", "tip", "hint", "weiter"],
+  "startMessage": "Hallo! Willkommen bei unserem Rätsel.",
+  "correctAnswer": "42",
+  "wrongResponses": [
+    "Hm… {userInput} ist leider nicht korrekt. Versuch es nochmal.",
+    "Interessant, dass du {userInput} ausprobiert hast, aber das ist nicht richtig.",
+    "Leider falsch: {userInput}. Überlege, was vorher passiert ist."
+  ],
+  "helpTriggers": ["hilfe", "tip", "hint", "weiter", "rat", "ich komme nicht weiter"],
   "helpResponses": [
     "Vielleicht solltest du das Symbol auf der Tür genau ansehen.",
-    "Überlege, welche Zahl auf dem Schloss fehlt."
-  ],
-  "defaultResponse": "Interessant… versuche weiter, das Rätsel zu lösen."
+    "Überlege, welche Zahl auf dem Schloss fehlt.",
+    "Sieh dir die Reihenfolge der Farben genau an.",
+    "Manchmal hilft es, auf Details im vorherigen Schritt zu achten."
+  ]
 }
