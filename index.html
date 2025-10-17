@@ -2,12 +2,13 @@
 <html lang="de">
 <head>
 <meta charset="utf-8" />
-<title>Story-Chatbot</title>
+<title>Chatbot Test</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <link rel="icon" href="favicon.png" type="image/png">
 <style>
 :root{
-  --bg1: url("Gefängnisinsasse.png") no-repeat center center fixed;
+  --bgDesktop: url("Gefängnisinsasse.png") no-repeat center center fixed;
+  --bgMobile: url("Gefängnisinsasse_mobil.png") no-repeat center center fixed;
   --bot-bubble: #f1f0f0;
   --user-bubble: #4e9af1;
 }
@@ -16,7 +17,7 @@ html,body{
   height:100%;
   margin:0;
   font-family: "Segoe UI", Tahoma, sans-serif;
-  background: var(--bg1);
+  background: var(--bgDesktop);
   background-size: cover;
   background-position: center center;
   display:flex;
@@ -24,6 +25,10 @@ html,body{
   justify-content:center;
   padding:10px;
   box-sizing:border-box;
+}
+
+@media (max-width: 500px) {
+  html,body { background: var(--bgMobile); }
 }
 
 #chat{
@@ -53,28 +58,6 @@ html,body{
 #userInput{flex:1;padding:10px;border-radius:24px;border:1px solid #ccc;font-size:14px;outline:none;}
 button#send{margin-left:8px;padding:10px 16px;border-radius:20px;border:none;background:#4e9af1;color:#fff;cursor:pointer;font-weight:600;}
 button#send:active{transform:translateY(1px);}
-#overlay{
-  position: fixed;
-  top:0;
-  left:0;
-  width:100vw;
-  height:100vh;
-  display:none;
-  opacity:0;
-  z-index:10000;
-  transition: opacity 400ms ease;
-  pointer-events: none;
-  background-size: cover;
-  background-position: center center;
-}
-
-@media (max-width: 400px) {
-  #chat{height:75vh;}
-  #messages{padding:10px; gap:8px;}
-  .bubble{font-size:13px; padding:8px 12px;}
-  #userInput{font-size:13px; padding:8px;}
-  button#send{padding:8px 12px;}
-}
 </style>
 </head>
 <body>
@@ -87,21 +70,17 @@ button#send:active{transform:translateY(1px);}
   </div>
 </div>
 
-<div id="overlay" aria-hidden="true"></div>
-
 <script>
-const messages=document.getElementById('messages');
-const input=document.getElementById('userInput');
-const sendBtn=document.getElementById('send');
-const overlay=document.getElementById('overlay');
+let story;
 
-let story = null;
+const messages = document.getElementById('messages');
+const input = document.getElementById('userInput');
+const sendBtn = document.getElementById('send');
 
-// Chatbot Avatare
-const botAvatar="bot.png";
-const userAvatar="user.png";
+const botAvatar = "bot.png";
+const userAvatar = "user.png";
 
-// Nachrichten einfügen
+// Nachricht einfügen
 function addMessage(text,sender='bot'){
   const msgWrap=document.createElement('div');
   msgWrap.className='message '+sender;
@@ -114,11 +93,11 @@ function addMessage(text,sender='bot'){
   if(sender==='bot'){msgWrap.appendChild(img);msgWrap.appendChild(bubble);}
   else{msgWrap.appendChild(bubble);msgWrap.appendChild(img);}
   messages.appendChild(msgWrap);
-  messages.scrollTop=messages.scrollHeight;
+  messages.scrollTop = messages.scrollHeight;
 }
 
 // Bot tippt
-function botType(text, delay=3000){
+function botType(text, delay=1500){
   return new Promise(resolve=>{
     const typing=document.createElement('div');
     typing.className='message bot';
@@ -133,60 +112,44 @@ function botType(text, delay=3000){
   });
 }
 
-// Overlay anzeigen
-function showOverlay(img,duration=3000){
-  overlay.style.background=`url("${img}") no-repeat center center`;
-  overlay.style.backgroundSize="cover";
-  overlay.style.display='block';
-  overlay.style.opacity='1';
-  setTimeout(()=>{
-    overlay.style.opacity='0';
-    setTimeout(()=>{overlay.style.display='none';},400);
-  },duration);
+// Chat starten
+function initChat(){
+  botType(story.startMessage);
 }
 
-// User-Eingabe
+// Eingabe
 function sendMessage(){
-  const txt=input.value.trim();
+  const txt = input.value.trim();
   if(!txt) return;
   addMessage(txt,'user');
   input.value='';
 
   const userInputLower = txt.toLowerCase();
 
-  // Prüfen, ob Hilfe benötigt wird
-  const needsHelp = story.helpTriggers.some(trigger =>
-    userInputLower.includes(trigger.toLowerCase())
-  );
-
-  if(userInputLower === story.expectedPhrase.toLowerCase()){
-    let delay=0;
-    story.correctResponse.forEach(r => {
-      setTimeout(()=>botType(r), delay);
-      delay += 3000;
-    });
-  } else if(needsHelp){
-    let delay=0;
-    story.helpResponses.forEach(r => {
-      setTimeout(()=>botType(r), delay);
-      delay += 3000;
-    });
-  } else {
-    botType(story.wrongResponse);
+  // Hilfe-Trigger prüfen
+  if(story.helpTriggers.some(trigger => userInputLower.includes(trigger))){
+    const hint = story.helpResponses[Math.floor(Math.random()*story.helpResponses.length)];
+    botType(hint);
+    return;
   }
+
+  // Standardantwort, falls keine Trigger
+  botType(story.defaultResponse);
 }
 
-// JSON Story laden
-fetch("story.json")
-.then(response => response.json())
-.then(data => {
-  story = data;
-  botType(story.startMessage);
-})
-.catch(err => console.error("Story konnte nicht geladen werden:", err));
-
+// Events
 sendBtn.addEventListener('click',sendMessage);
-input.addEventListener('keydown',e=>{if(e.key==='Enter')sendMessage();});
+input.addEventListener('keydown',e=>{if(e.key==='Enter') sendMessage();});
+
+// Story laden und Chat starten
+fetch("story.json")
+  .then(res => res.json())
+  .then(data => {
+    story = data;
+    initChat();
+  })
+  .catch(err => console.error("Story konnte nicht geladen werden:", err));
+
 </script>
 </body>
 </html>
